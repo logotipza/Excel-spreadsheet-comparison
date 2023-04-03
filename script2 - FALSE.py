@@ -10,8 +10,8 @@ def select_files_and_columns():
     file_path2 = filedialog.askopenfilename(title="Выберите вторую таблицу")
     output_file_path = filedialog.asksaveasfilename(title="Сохранить результаты", defaultextension=".xlsx")
 
-    col_name1 = input("Введите название столбца для первой таблицы: ")
-    col_name2 = input("Введите название столбца для второй таблицы: ")
+    col_name1 = column1_entry.get()
+    col_name2 = column2_entry.get()
 
     df1 = pd.read_excel(file_path1)
     df2 = pd.read_excel(file_path2)
@@ -46,6 +46,16 @@ def select_files_and_columns():
 # Инициализация графического интерфейса
 root = tk.Tk()
 root.title('Сравнение таблиц')
+
+column1_label = tk.Label(root, text="Столбец в первой таблице:")
+column1_label.pack()
+column1_entry = tk.Entry(root)
+column1_entry.pack()
+
+column2_label = tk.Label(root, text="Столбец во второй таблице:")
+column2_label.pack()
+column2_entry = tk.Entry(root)
+column2_entry.pack()
 
 select_button = tk.Button(root, text='Выбрать файлы и столбцы', command=select_files_and_columns)
 select_button.pack()
