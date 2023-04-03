@@ -41,6 +41,8 @@ def select_files_and_columns():
 
         result_rows = []
         unmatched_rows = []
+        unused_rows = []
+        used_rows = set()
 
         for i, row1 in df1.iterrows():
             cell_value1 = row1[col_name1]
@@ -48,35 +50,47 @@ def select_files_and_columns():
             repeated = False
             for j, row2 in df2.iterrows():
                 if str(cell_value1) in str(row2[col_name2]):
+                    used_rows.add(j)
                     if not matched:
                         matched = True
                     else:
                         repeated = True
-                    new_row = row1.tolist() + row2.tolist() + [matched, repeated]
+                    new_row = row1.tolist() + row2.tolist() + [matched, repeated, False]
                     result_rows.append(new_row)
             if not matched:
-                new_row = row1.tolist() + [None] * len(df2.columns) + [matched, repeated]
+                new_row = row1.tolist() + [None] * len(df2.columns) + [matched, repeated, False]
                 unmatched_rows.append(new_row)
 
+        for i, row2 in df2.iterrows():
+            if i not in used_rows:
+                new_row = [None] * len(df1.columns) + row2.tolist() + [False, False, True]
+                unused_rows.append(new_row)
+
         result_rows.extend(unmatched_rows)
-        result_df = pd.DataFrame(result_rows, columns=df1.columns.tolist() + df2.columns.tolist() + ['matched', 'repeated'])
+        result_rows.extend(unused_rows)
+        result_df = pd.DataFrame(result_rows, columns=df1.columns.tolist() + df2.columns.tolist() + ['matched', 'repeated', 'unused'])
 
         wb = Workbook()
         ws = wb.active
         red_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
         blue_fill = PatternFill(start_color='ADD8E6', end_color='ADD8E6', fill_type='solid')
+        yellow_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
 
-        for row_index, row in enumerate(dataframe_to_rows(result_df, index=False, header=True)):
-            if row_index == 0:  # Заголовок таблицы
+        for r_idx, row in enumerate(dataframe_to_rows(result_df, index=False, header=True)):
+            if r_idx == 0:
                 ws.append(row)
             else:
-                ws.append(row[:-2])
-                if not row[-2]:  # Если значение в столбце 'matched' равно False
+                ws.append(row[:-3])
+                row_index = ws.max_row - 1
+                if not row[-3]:  # Если значение в столбце 'matched' равно False
                     for cell in ws[row_index + 1]:
                         cell.fill = red_fill
-                elif row[-1]:  # Если значение в столбце 'repeated' равно True
+                elif row[-2]:  # Если значение в столбце 'repeated' равно True
                     for cell in ws[row_index + 1]:
                         cell.fill = blue_fill
+                elif row[-1]:  # Если значение в столбце 'unused' равно True
+                    for cell in ws[row_index + 1]:
+                        cell.fill = yellow_fill
 
         wb.save(output_file_path)
 
@@ -92,4 +106,3 @@ select_button.pack()
 
 root.mainloop()
 
-               
